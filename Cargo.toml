@@ -1,0 +1,16 @@
+[package]
+name = "piazza-clone"
+version = "0.1.0"
+authors = ["Mani Kamali <kamalisarvestani.1@themetroschool.org>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "0.2", features = ["macros"] }
+warp = "0.2"
+ammonia = "3"
+sqlx = { version = "0.3.5", default-features = false, features = ["runtime-tokio", "sqlite", "macros"] }
+
+
+
