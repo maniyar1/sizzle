@@ -7,11 +7,7 @@ use std::path::Path;
 use futures::future::{BoxFuture, FutureExt};
 
 pub async fn home(pool: SqlitePool) -> String {
-    let path = Path::new("home.html");
-    let display = path.display();
-    let mut file = File::open(&path).unwrap();
     let mut html = String::new();
-    //file.read_to_string(&mut html).unwrap();
     let posts = db::get_posts_sorted_by_id(pool).await.unwrap();
     for post in posts {
         if post.2.is_none() {
@@ -42,7 +38,7 @@ pub async fn home(pool: SqlitePool) -> String {
 </html>",
         html
     );
-    return final_html;
+    final_html
 }
 
 pub async fn view_post(id: i64, pool: SqlitePool) -> String {
@@ -50,8 +46,8 @@ pub async fn view_post(id: i64, pool: SqlitePool) -> String {
     if post.comments.is_some() {
         let comments = post.comments.unwrap();
         for comment in comments {
-            let commentPost = db::get_post(comment, pool.clone()).await.unwrap();
-            println!("{:#?}", commentPost);
+            let comment_post = db::get_post(comment, pool.clone()).await.unwrap();
+            println!("{:#?}", comment_post);
         }
     }
     let html = format!(
@@ -71,7 +67,7 @@ pub async fn view_post(id: i64, pool: SqlitePool) -> String {
 </html>",
         get_post_html(id, pool.clone(), 0).await
     );
-    return html;
+    html
 }
 pub fn get_post_html(id: i64, pool: SqlitePool, layer: u8) -> BoxFuture<'static, String> {
     async move {
@@ -122,19 +118,18 @@ pub fn get_post_html(id: i64, pool: SqlitePool, layer: u8) -> BoxFuture<'static,
                 );
             }
         }
-        return html;
+        html
     }
     .boxed()
 }
 
 pub async fn new_post() -> String {
     let path = Path::new("new-post.html");
-    let display = path.display();
     let mut file = match File::open(&path) {
-        Err(why) => panic!("couldn't open {}: {}", display, why),
+        Err(why) => panic!("couldn't open new-post.html {}", why),
         Ok(file) => file,
     };
     let mut html = String::new();
     file.read_to_string(&mut html).unwrap();
-    return html;
+    html
 }

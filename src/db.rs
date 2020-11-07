@@ -1,8 +1,5 @@
-use crate::CommentIDs;
 use crate::Post;
 
-use csv::ReaderBuilder;
-use futures::future::{BoxFuture, FutureExt};
 use sqlx::sqlite::{SqlitePool, SqliteQueryAs};
 
 pub async fn submit_post(post: Post, parentid: Option<i64>, pool: SqlitePool) {
@@ -32,20 +29,20 @@ pub async fn submit_post(post: Post, parentid: Option<i64>, pool: SqlitePool) {
             new_comments = parent.comments.unwrap();
         }
         new_comments.push(id);
-        updateComments(parentid, new_comments, pool.clone()).await;
+        update_comments(parentid, new_comments, pool.clone()).await;
     }
 }
 
-pub async fn updateComments(id: i64, comments: Vec<i64>, pool: SqlitePool) {
+pub async fn update_comments(id: i64, comments: Vec<i64>, pool: SqlitePool) {
     let conn = pool.acquire().await.unwrap();
-    let commentsString: String = serde_json::to_string(&comments).unwrap();
-    println!("Updating comments to {}", commentsString);
+    let comments_string: String = serde_json::to_string(&comments).unwrap();
+    println!("Updating comments to {}", comments_string);
     sqlx::query(
         "
     UPDATE submissions SET children = ? WHERE id = ?
         ",
     )
-    .bind(commentsString)
+    .bind(comments_string)
     .bind(id)
     .execute(conn)
     .await
@@ -71,7 +68,7 @@ CREATE TABLE IF NOT EXISTS SUBMISSIONS(
     .execute(conn)
     .await
     .unwrap();
-    return pool;
+    pool
 }
 pub async fn get_post(id: i64, pool: SqlitePool) -> Option<Post> {
     let mut conn = pool.acquire().await.unwrap();
@@ -88,13 +85,13 @@ pub async fn get_post(id: i64, pool: SqlitePool) -> Option<Post> {
         let comment_ids: Vec<i64> = serde_json::from_str(&row.2.unwrap()).unwrap();
         comments = Some(comment_ids);
     }
-    return Some(Post {
+    Some(Post {
         title: row.0,
         description: row.1,
         id: Some(id),
         parent: row.3,
-        comments: comments,
-    });
+        comments,
+    })
 }
 
 pub async fn get_post_id(title: String, pool: SqlitePool) -> Option<i64> {
@@ -106,7 +103,7 @@ pub async fn get_post_id(title: String, pool: SqlitePool) -> Option<i64> {
             .fetch_one(&mut conn)
             .await
             .unwrap();
-    return Some(row.2);
+    Some(row.2)
 }
 
 pub async fn get_posts_sorted_by_id(
@@ -119,5 +116,5 @@ pub async fn get_posts_sorted_by_id(
             .fetch_all(&mut conn)
             .await
             .unwrap();
-    return Some(rows);
+    Some(rows)
 }

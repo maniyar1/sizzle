@@ -68,15 +68,15 @@ async fn submit(
     let post = Post {
         title: form["title"].clone(),
         description: form["description"].clone(),
-        parent: parent,
+        parent,
         id: None,
         comments: None,
     };
     db::submit_post(post, parent, pool.clone()).await;
-    return home(pool.clone()).await;
+    home(pool.clone()).await
 }
 
 async fn view_post(id: i64, pool: SqlitePool) -> Result<impl warp::Reply, Infallible> {
     let html = html::view_post(id, pool).await;
-    return Ok(warp::reply::html(html));
+    Ok(warp::reply::html(html))
 }
