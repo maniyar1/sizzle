@@ -62,10 +62,22 @@ pub async fn view_post(id: i64, pool: SqlitePool) -> String {
     <body>
         <main>
          {}
+        <form action=\"/submit\" method=\"post\" enctype=\"application/x-www-form-urlencoded\">
+            <label for=\"title\">Title: <label>
+            <input type=\"text\" id=\"title\" name=\"title\"> <br>
+            <label for=\"parent\">Parent: <label>
+            <input type=\"number\" id=\"parent\" name=\"parent\" value={}> <br>
+
+            <label for=\"description\">Description: <label> 
+            <textarea id=\"description\" name=\"description\">
+            </textarea>
+
+            <button type=\"submit\">Submit question</button>
+        </form>
         </main>
     </body>
 </html>",
-        get_post_html(id, pool.clone(), 0).await
+        get_post_html(id, pool.clone(), 0).await, id
     );
     html
 }
@@ -84,28 +96,17 @@ pub fn get_post_html(id: i64, pool: SqlitePool, layer: u8) -> BoxFuture<'static,
                 desc = post.description,
                 indent = layer
             );
-        } else if layer <= 6 {
-            html = format!(
-                "
-        <div style=\"margin-left: {indent}em\">
-        <h{layer}> {title} </h{layer}>
-        <p>
-        {desc} </span> </p>",
-                title = post.title,
-                desc = post.description,
-                layer = layer,
-                indent = layer
-            );
         } else {
             html = format!(
                 "
         <div style=\"margin-left: {indent}em\">
-        <h6> {title} </h6>
+        <h4> <a href=/post/{id}> {title} </a></h4>
         <p>
         {desc} </span> </p>",
                 title = post.title,
                 desc = post.description,
-                indent = layer
+                indent = layer,
+                id = id
             );
         }
         if post.comments.is_some() {
